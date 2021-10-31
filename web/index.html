@@ -1,0 +1,410 @@
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link rel="icon" href="favicon.png" />
+<script src="https://cdn.ethers.io/lib/ethers-5.2.umd.min.js" type="application/javascript"></script>
+<script src="https://unpkg.com/bchaddrjs@0.5.2/dist/bchaddrjs-0.5.2.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+<script src="hex2wif.bundle.js" type="application/javascript"></script>
+<script src="mainnet.bundle.js" type="application/javascript"></script>
+<script src="https://unpkg.com/@metamask/detect-provider/dist/detect-provider.min.js"></script>
+<title>hop.cash</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css">
+<style>
+        input {
+            width: 24px;
+            height: 24px;
+        }
+
+	code {overflow-wrap: break-word;}
+
+        /* The Modal (background) */
+        .modal {
+            display: none; /* Hidden by default */
+            position: fixed; /* Stay in place */
+            z-index: 1; /* Sit on top */
+            left: 0;
+            top: 0;
+            width: 100%; /* Full width */
+            height: 100%; /* Full height */
+            overflow: auto; /* Enable scroll if needed */
+            background-color: rgb(0, 0, 0); /* Fallback color */
+            background-color: rgba(0, 0, 0, 0.4); /* Black w/ opacity */
+        }
+
+        /* Modal Content/Box */
+        .modal-content {
+	    border-radius: 8px;
+            background-color: #fefefe;
+            margin: 35% auto; /* 15% from the top and centered */
+            padding: 20px;
+            border: 1px solid #888;
+            width: 350px;
+        }
+
+        /* The Close Button */
+        .close {
+            color: #91cdb5;
+            float: right;
+            font-size: 22px;
+            font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: #3fc388;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+</style>
+</head>
+<body style="margin: 0 auto; width: 380px">
+<div class="section">
+  <p style="text-align: center"><img src="logo.png" alt="HopCashLogo"></p>
+  
+  <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  <a href="/?lang=en"><span class="tag is-white">English</span></a>&nbsp;&nbsp;&nbsp;<a
+      		       href="/?lang=cn"><span class="tag is-white">中文</span></a></p>
+
+  <p style="font-size: 8px;">&nbsp;</p>
+  <p style="text-align: center"><button class="button is-small" onclick="addSmartBCH()" data-T>
+   	Add smartBCH to Wallet//将smartBCH加入钱包</button></p>
+
+  <p style="font-size: 8px;">&nbsp;</p>
+
+  <p style="text-align: center" id="walletP">
+      <button class="button is-large is-success is-light" onclick="connectWallet()" data-T>Connect to Wallet//连接钱包</button>
+  </p>
+  <p style="font-size: 8px;">&nbsp;</p>
+
+  <div id="selDiv" style="display: none">
+    <center data-T>Current Side-Chain Address: //当前侧链地址：</center>
+    <code id="currAddr"></code>
+    <p style="font-size: 8px;">&nbsp;</p>
+    <input type="radio" style="height: 12px" name="SelectDir" id="hopIn"
+     value="HOPIN" onclick="showHopIn()"><label for="hopIn" data-T style="font-size: 18px"
+	title="BCH → smartBCH">Funds hop in smartBCH //资金进入smartBCH(主转侧)</label><br>
+    <input type="radio" style="height: 12px" name="SelectDir" id="hopOut"
+     value="HOPOUT" onclick="showHopOut()"><label for="hopOut" data-T style="font-size: 18px"
+	title="smartBCH → BCH">Funds hop out smartBCH //资金离开smartBCH(侧转主)</label><br>
+  </div>
+
+  <hr/>
+    
+  <div id="hopInDiv" style="display: none">
+    <p data-T>Please deposit main-chain BCH into your hop-wallet, using one of following address formats://请向您的Hop钱包里充值主链BCH，以下两种格式的地址供您选择：</p>
+    <p style="font-size: 8px;">&nbsp;</p>
+    <p style="text-align: center;">
+    <b>1.&nbsp;CashAddress:</b><br>
+      <code id="cashAddr"></code><br>
+      <canvas id="cashAddrQR"></canvas>
+    </p>
+    <p style="font-size: 8px;">&nbsp;</p>
+    <p style="text-align: center;">
+    <b>2.&nbsp;Legacy Address:</b><br>
+      <code id="legacyAddr"></code><br>
+      <canvas id="legacyAddrQR"></canvas>
+    </p>
+    <p data-T>Your hop-wallet is continuously watched here, and once on-chain deposit makes its balance no less than 0.0002 BCH, these funds will be transferred to smartBCH automatically. During this cross-chain transfer, hop.cash will charge a service fee, which is 0.1% of the transfer amount (but not less than 0.0001 BCH). //您的Hop钱包将在此被持续地监控，一旦链上充值使它的余额不小于0.0002 BCH，则这些资金将被自动传送至smartBCH。在跨链传送的过程中，hop.cash将收取服务费，数额为您所传送金额的0.1%（但不少于0.0001 BCH）。</p>
+    <p data-T style="color: red; font-weight: bold">Note: Your hop-wallet should only be used for this site! If you grant other websites to use it, your funds may be stolen!//注意：您的Hop钱包应该仅仅在本网站使用！如果授权其他网站使用您的Hop钱包，您的资金可能被盗！</p>
+    <div id="inProgress"></div>
+  </div>
+
+  <div id="hopOutDiv" style="display: none">
+    <div id="hopOutForm">
+      <p><span data-T>Recipient Address on main chain://主链收款地址：</span><br>
+      <input id="recipientAddr" class="input is-success is-small" type="text"></p>
+      <p><span data-T>Amount://金额：</span>
+      <input id="amount" type="number" class="input is-success is-small" ></p>
+      <p style="font-size: 8px;">&nbsp;</p>
+      <center><button class="button is-success is-light" onclick="transfer()" 
+	id="transferBtn" data-T>Cross-chain Transfer//跨链转账</button></center>
+    </div>
+    <p style="font-size: 8px;">&nbsp;</p>
+    <p id="hopOutTxInfo" style="display: none">
+      <span data-T>Your cross-chain transfer's transaction is://您的跨链转账交易为：</span><a id="hopOutTxLink" href=""></a><br>
+      <span data-T>The recipient address is continuously watched here. If it receives new coins in a transaction, the transaction's will be shown below.//这里将持续监控主链收款地址，一旦它在某交易中接收到了新币，此交易将被显示在下面。</span>
+    </p> 
+    <div id="outProgress"></div>
+  </div>
+
+</div>
+<div id="myModal" class="modal">
+    <div class="modal-content">
+        <p id="modalContent" style="text-align: center; overflow-wrap: break-word"></p>
+        <span class="close">&nbsp;&nbsp;&nbsp;&nbsp;OK</span>
+    </div>
+</div>
+<script type="text/javascript">
+const CCAddress = "0x1C00b18A71802d13D93C76Be60B716099CC06C55"
+const PoolAddrOnBCH = "bitcoincash:qplq0gks9696xuhmar3kwxrn9u63rq9llumfezlljz"
+const MinerFee = 800 //satoshi
+
+async function showHopIn() {
+	document.getElementById("hopOutDiv").style.display = "none";
+	if(!window.wallet) {
+		await initWallet();
+	}
+	document.getElementById("hopInDiv").style.display = "block";
+}
+
+function showHopOut() {
+	document.getElementById("hopInDiv").style.display = "none";
+	document.getElementById("hopOutDiv").style.display = "block";
+}
+
+async function initWallet() {
+	const provider = new ethers.providers.Web3Provider(window.ethereum);
+	const signer = provider.getSigner();
+	const myAddr = await signer.getAddress();
+	const signature = await signer.signMessage("I hereby grant this website the permission to access my hop-wallet for "+myAddr);
+	var privKey = ethers.BigNumber.from(ethers.utils.sha256(signature));
+	const prime = ethers.BigNumber.from("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364140");
+	privKey = privKey.mod(prime);
+	//console.log("privKey", privKey.toHexString());
+	const wif = hex2wif(privKey.toHexString().substr(2));
+	//console.log("wif", wif);
+	window.wallet = await Wallet.fromWIF(wif);
+	const cashAddr = window.wallet.getDepositAddress();
+	const legacyAddr = bchaddr.toLegacyAddress(cashAddr);
+	document.getElementById("cashAddr").innerText = cashAddr;
+	document.getElementById("legacyAddr").innerText = legacyAddr;
+	new QRious({element: document.getElementById("cashAddrQR"), value: cashAddr});
+	new QRious({element: document.getElementById("legacyAddrQR"), value: legacyAddr});
+	window.FromBlock = await provider.getBlockNumber();
+        clearInterval(window.refreshTimer);
+        window.refreshTimer = setInterval(hopInRefresh, 6000);
+}
+
+function makeBchTxLink(txId) {
+	var linkNode = document.createElement("A");
+	linkNode.href = "https://blockchair.com/bitcoin-cash/transaction/"+txId;
+	linkNode.innerHTML = "<code>"+txId+"</code>";
+	return linkNode;
+}
+
+function makeSmartBchTxLink(txId) {
+	var linkNode = document.createElement("A");
+	linkNode.href = "https://www.smartscan.cash/transaction/"+txId;
+	linkNode.innerHTML = "<code>"+txId+"</code>";
+	return linkNode;
+}
+
+async function hopInRefresh() {
+	const provider = new ethers.providers.Web3Provider(window.ethereum);
+	const signer = provider.getSigner();
+	const myAddr = await signer.getAddress();
+
+	// Check Main Chain
+	const balance = await wallet.getBalance('sat');
+	console.log("balance", balance);
+	if(balance >= 20000/*0.0002BCH*/) {
+		const txData = await wallet.send([
+			OpReturnDataFromString(myAddr),
+			{cashaddr: PoolAddrOnBCH, value: balance-MinerFee, unit: "sat"},
+		]);
+		const amount = balance/100000000.0;
+		const text = T(`Find ${amount} BCH in hop-wallet, now sending them to smartBCH with this transaction: //发现hop-wallet中的余额为${amount}，现将它们发送至smartBCH，通过此交易：`);
+		AddToInGrogressDiv(text, makeBchTxLink(txData.txId));
+	}
+	// Check Side Chain
+	const Transfer = ethers.utils.id("Transfer(address,address,uint256)");
+	const myAddrPad32 = ethers.utils.hexZeroPad(myAddr, 32);
+	var tokenIdList = [];
+	var filter = {address: CCAddress, topics: [Transfer, null/*sender*/, myAddrPad32/*receiver*/]};
+	filter.toBlock = 10000*10000 // a very large value
+	filter.fromBlock = window.FromBlock;
+	var logs = await provider.getLogs(filter);
+	console.log("logs", logs)
+	for(var i=0; i<logs.length; i++) {
+		window.FromBlock = logs[i].blockNumber + 1;
+		const amount = ethers.utils.formatUnits(logs[i].data);
+		const text = T(`On smartBCH, ${amount} BCH were sent to your account in this transaction: //在smartBCH上，数额为${amount}的BCH刚刚发送至您的账户，通过此交易：`);
+		AddToInGrogressDiv(text, makeSmartBchTxLink(logs[i].transactionHash));
+	}
+}
+
+function AddToInGrogressDiv(text, linkNode) {
+	var textNode = document.createTextNode(text);
+	var node = document.createElement("P");
+	node.appendChild(textNode);
+	node.appendChild(linkNode);
+	document.getElementById("inProgress").appendChild(node);
+}
+
+async function transfer() {
+	const addr = document.getElementById("recipientAddr").value;
+	if(!bchaddr.isValidAddress(addr)) {
+		myAlert(T("Invalid address for BCH main chain://不是有效的BCH主链地址：")+addr);
+		return;
+	}
+	window.recipientAddr = addr;
+	const amount = ethers.utils.parseUnits(document.getElementById("amount").value);
+	
+	const provider = new ethers.providers.Web3Provider(window.ethereum);
+	const signer = provider.getSigner();
+	const txReq = {
+	      to: CrossChainAddrOnSmartBCH,
+	      value: amount,
+	      data: ethers.utils.hexlify(ethers.utils.toUtf8Bytes(addr)),
+	};
+	const txResp = await signer.sendTransaction(txReq);
+	const receipt = await txResp.wait();
+	
+	var link = document.getElementById("hopOutTxLink");
+	link.innerHTML = "<code>"+receipt.transactionHash+"</code>";
+	link.href="https://www.smartscan.cash/transaction/"+receipt.transactionHash;
+	document.getElementById("hopOutForm").style.display = "none";
+	document.getElementById("hopOutTxInfo").style.display = "block";
+
+	window.legacyAddr = bchaddr.toLegacyAddress(addr);
+	const wallet = await Wallet.watchOnly(addr);
+	wallet.watchAddressTransactions(showTxOfRecipient);
+}
+
+function showTxOfRecipient(tx) {
+	var amount = 0;
+	for(var i=0; i<tx.vout.length; i++) {
+		const utxo = tx.vout[i]
+		if(utxo.scriptPubKey && utxo.scriptPubKey.type == "pubkeyhash" && utxo.scriptPubKey.addresses &&
+		utxo.scriptPubKey.addresses[0] == window.legacyAddr) {
+			amount += utxo.value;
+		}
+	}
+	const text = T(`Recipient address received ${amount} BCH in a new transaction: //收款地址在新交易中收到了${amount} BCH：`);
+	var textNode = document.createTextNode(text);
+	var linkNode = makeBchTxLink(tx.hash);
+	var node = document.createElement("P");
+	node.appendChild(textNode);
+	node.appendChild(linkNode);
+	document.getElementById("outProgress").appendChild(node);
+}
+
+async function connect() {
+	if (typeof window.ethereum === 'undefined') {
+		if (typeof window.web3 !== 'undefined') {
+			window.ethereum = window.web3;
+		} else if (typeof window.TPJSBrigeClient !== 'undefined') {
+			window.ethereum = window.TPJSBrigeClient;
+		} else if (typeof window.imToken !== 'undefined') {
+			window.ethereum = window.imToken;
+		} else {
+			const provider = await detectEthereumProvider();
+			if (provider) {
+				window.ethereum = provider;
+			} else {
+				myAlert(T("您尚未安装钱包//You have not installed a wallet"));
+			}
+		}
+	}
+	window.accounts = await window.ethereum.request({method: 'eth_requestAccounts'});
+	if (window.accounts.length == 0) {
+		myAlert(T("钱包连接失败//Cannot connect to wallet"));
+		return false;
+	}
+	return true;
+}
+
+async function connectWallet() {
+	if(!connect()) {return;}
+	const provider = new ethers.providers.Web3Provider(window.ethereum);
+	const signer = provider.getSigner();
+	document.getElementById("currAddr").innerText = await signer.getAddress();
+	document.getElementById("walletP").style.display = "none";
+	document.getElementById("selDiv").style.display = "block";
+}
+
+function myAlert(text) {
+	document.getElementById("myModal").style.display = "block";
+	document.getElementById("modalContent").innerText = text;
+}
+
+function T(text) {
+	try {
+		const twoStr = text.split("//");
+		if (window.LANG === "cn") {
+		    return twoStr[1];
+		}
+		return twoStr[0];
+	} catch (e) {
+		return text;
+	}
+}
+
+async function addSmartBCH() {
+	const err = await window.ethereum.request({
+	  method: 'wallet_addEthereumChain',
+	  params: [{
+	    "chainId": "0x2710",
+	    "chainName": "smartBCH",
+	    "rpcUrls": ["https://global.uat.cash"],
+	    "nativeCurrency": {
+	      "name": "smart BCH",
+	      "symbol": "BCH",
+	      "decimals": 18
+	    },
+	    "blockExplorerUrls": ["https://www.smartscan.cash"]
+	  }],
+	});
+	if(err !== null) {
+		myAlert("failed to add smartBCH to your wallet. "+err.toString());
+	}
+}
+
+window.addEventListener('DOMContentLoaded', async (event) => {
+	// Get the modal
+	var modal = document.getElementById("myModal");
+
+	// Get the <span> element that closes the modal
+	var span = document.getElementsByClassName("close")[0];
+
+	// When the user clicks on <span> (x), close the modal
+	span.onclick = function () {
+	    modal.style.display = "none";
+	}
+
+	// When the user clicks anywhere outside of the modal, close it
+	window.onclick = function (event) {
+		if (event.target == modal) {
+			modal.style.display = "none";
+		}
+	}
+
+	window.LANG = "en";
+	console.log(window.location.href);
+	const url = new URL(location.href);
+	if(url.searchParams.get("lang") == "cn") {
+		window.LANG = "cn";
+	} else if (url.searchParams.get("lang") == "en") {
+		window.LANG = "en";
+	} else if (navigator.language.startsWith("zh")) {
+		window.LANG = "cn";
+	}
+	var elems = document.querySelectorAll('*[data-T]');
+	for (var i = 0; i < elems.length; i++) {
+		elems[i].innerText = T(elems[i].innerText);
+	}
+})
+
+function IsPC() {
+       var userAgentInfo = navigator.userAgent;
+       var Agents = new Array("Android", "iPhone", "SymbianOS", "Windows Phone", "iPad", "iPod");
+       var flag = true;
+       for (var v = 0; v < Agents.length; v++) {
+            if (userAgentInfo.indexOf(Agents[v]) > 0) {
+                flag = false;
+                break;
+             }
+       }
+       return flag;
+}
+
+if(IsPC()) {
+   document.body.style.zoom = 1.36;
+}
+
+//https://blockchair.com/bitcoin-cash/transaction/21b3f273238ceec957c8aab4cb774f111eca1d3ba84900db0bb7062028593494
+</script>
+</body>
+</html>
