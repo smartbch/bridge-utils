@@ -63,9 +63,9 @@
 <div class="section">
   <p style="text-align: center"><img src="logo.png" alt="HopCashLogo"></p>
   
-  <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-  <a href="/?lang=en"><span class="tag is-white">English</span></a>&nbsp;&nbsp;&nbsp;<a
-      		       href="/?lang=cn"><span class="tag is-white">中文</span></a></p>
+  <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  <a href="/?lang=en"><span class="tag is-white">English</span></a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  <a href="/?lang=cn"><span class="tag is-white">中文</span></a></p>
 
   <p style="font-size: 8px;">&nbsp;</p>
   <p style="text-align: center"><button class="button is-small" onclick="addSmartBCH()" data-T>
@@ -79,8 +79,9 @@
   <p style="font-size: 8px;">&nbsp;</p>
 
   <div id="selDiv" style="display: none">
-    <center data-T>Current Side-Chain Address: //当前侧链地址：</center>
-    <code id="currAddr"></code>
+    <center data-T>Your Current Side-Chain Address: //当前您的侧链地址：</center>
+    <a href="" id="currAddrLink" target="_blank"><code id="currAddr"></code></a>
+    <p data-T>During this cross-chain transfer, hop.cash will charge a service fee, which is 0.1% of the transfer amount (but not less than 0.0001 BCH). //在跨链传送的过程中，hop.cash将收取服务费，数额为您所传送金额的0.1%（但不少于0.0001 BCH）。</p>
     <p style="font-size: 8px;">&nbsp;</p>
     <input type="radio" style="height: 12px" name="SelectDir" id="hopIn"
      value="HOPIN" onclick="showHopIn()"><label for="hopIn" data-T style="font-size: 18px"
@@ -90,9 +91,10 @@
 	title="smartBCH → BCH">Funds hop out smartBCH //资金离开smartBCH(侧转主)</label><br>
   </div>
 
-  <hr/>
-    
   <div id="hopInDiv" style="display: none">
+    <hr/>
+    <center><b data-T>Pool Balance on smartBCH://smartBCH侧链资金池余额：</b><span id="smartbchPoolBalance"></span></center>
+    <p style="font-size: 8px;">&nbsp;</p>
     <p data-T>Please deposit main-chain BCH into your hop-wallet, using one of following address formats://请向您的Hop钱包里充值主链BCH，以下两种格式的地址供您选择：</p>
     <p style="font-size: 8px;">&nbsp;</p>
     <p style="text-align: center;">
@@ -106,25 +108,31 @@
       <code id="legacyAddr"></code><br>
       <canvas id="legacyAddrQR"></canvas>
     </p>
-    <p data-T>Your hop-wallet is continuously watched here, and once on-chain deposit makes its balance no less than 0.0002 BCH, these funds will be transferred to smartBCH automatically. During this cross-chain transfer, hop.cash will charge a service fee, which is 0.1% of the transfer amount (but not less than 0.0001 BCH). //您的Hop钱包将在此被持续地监控，一旦链上充值使它的余额不小于0.0002 BCH，则这些资金将被自动传送至smartBCH。在跨链传送的过程中，hop.cash将收取服务费，数额为您所传送金额的0.1%（但不少于0.0001 BCH）。</p>
+    <p data-T>Your hop-wallet is continuously watched here, and once on-chain deposit makes its balance no less than 0.0002 BCH, these funds will be transferred to smartBCH automatically. //您的Hop钱包将在此被持续地监控，一旦链上充值使它的余额不小于0.0002 BCH，则这些资金将被自动传送至smartBCH。</p>
     <p data-T style="color: red; font-weight: bold">Note: Your hop-wallet should only be used for this site! If you grant other websites to use it, your funds may be stolen!//注意：您的Hop钱包应该仅仅在本网站使用！如果授权其他网站使用您的Hop钱包，您的资金可能被盗！</p>
     <div id="inProgress"></div>
+    <!--
+    <center data-T>Under Construction//建设中...</center>
+    -->
   </div>
 
   <div id="hopOutDiv" style="display: none">
+    <hr/>
     <div id="hopOutForm">
+      <center><b data-T>Pool Balance on main chain://主链资金池余额：</b><span id="bchPoolBalance"></span></center>
       <p><span data-T>Recipient Address on main chain://主链收款地址：</span><br>
       <input id="recipientAddr" class="input is-success is-small" type="text"></p>
       <p><span data-T>Amount://金额：</span>
       <input id="amount" type="number" class="input is-success is-small" ></p>
       <p style="font-size: 8px;">&nbsp;</p>
-      <center><button class="button is-success is-light" onclick="transfer()" 
+      <center><button class="button is-success is-light" onclick="smartBCH_to_BCH()" 
 	id="transferBtn" data-T>Cross-chain Transfer//跨链转账</button></center>
+      <div id="hisAddrTable"></div>
     </div>
     <p style="font-size: 8px;">&nbsp;</p>
     <p id="hopOutTxInfo" style="display: none">
-      <span data-T>Your cross-chain transfer's transaction is://您的跨链转账交易为：</span><a id="hopOutTxLink" href=""></a><br>
-      <span data-T>The recipient address is continuously watched here. If it receives new coins in a transaction, the transaction's will be shown below.//这里将持续监控主链收款地址，一旦它在某交易中接收到了新币，此交易将被显示在下面。</span>
+      <span data-T>Your cross-chain transfer's transaction is://您的跨链转账交易为：</span><a id="hopOutTxLink" href="" target="_blank"></a><br>
+      <span data-T>The recipient address is continuously watched here. Once it receives new coins, you'll be notified below.//这里将持续监控主链收款地址，一旦它接收到了新币，您将会被提示。</span>
     </p> 
     <div id="outProgress"></div>
   </div>
@@ -136,25 +144,68 @@
         <span class="close">&nbsp;&nbsp;&nbsp;&nbsp;OK</span>
     </div>
 </div>
+<p style="font-size: 8px;">&nbsp;</p>
+<hr>
+<center><code><a target="_blank" href="https://t.me/hopcash">https://t.me/hopcash</a></code></center>
 <script type="text/javascript">
-const CCAddress = "0x1C00b18A71802d13D93C76Be60B716099CC06C55"
-const PoolAddrOnBCH = "bitcoincash:qplq0gks9696xuhmar3kwxrn9u63rq9llumfezlljz"
-const MinerFee = 800 //satoshi
+// The smart contract CrossChainTransfer's deployed address
+const CCTransAddress = "0x1C00b18A71802d13D93C76Be60B716099CC06C55"
+// The incoming account's address on BCH main chain
+const IncomeAddrOnBCH = "bitcoincash:qz60h0pvlr3jlqzggwwjqkvqk7xtxl6kgy3dl6eps9"
+// The outgoing account's address on BCH main chain
+const PoolAddrOnBCH = "bitcoincash:qrvsgv8j5ed2fdfxwxk7d895uqw373j8fcmzqtcwzt"
+// The incoming account's address on smartBCH side chain
+const IncomeAddrOnSmartBCH = "0x1c4DCD2153Eb0f5267CB2511D327B39800E7197b"
+// The outgoing account's address on smartBCH side chain
+const PoolAddrOnSmartBCH = "0xA3f4C7404862DbAc5249b836938daD9849ab91ce"
+// The hop-wallet pay this miner fee when sending coins to IncomeAddrOnBCH
+const MinerFee = 800 //in satoshi
 
+// To show the hopInDiv, we need to show PoolAddrOnSmartBCH's balance and initialize the hop-wallet
 async function showHopIn() {
 	document.getElementById("hopOutDiv").style.display = "none";
-	if(!window.wallet) {
-		await initWallet();
+
+	const provider = new ethers.providers.Web3Provider(window.ethereum);
+	const signer = provider.getSigner();
+	var updatePoolBalance = async function() {
+		const balance256 = await provider.getBalance(PoolAddrOnSmartBCH);
+		document.getElementById("smartbchPoolBalance").innerText = ethers.utils.formatUnits(balance256);
+	}
+	updatePoolBalance();
+        clearInterval(window.smartbchPoolTimer);
+	window.smartbchPoolTimer = setInterval(updatePoolBalance, 12000);
+
+	if(!window.hopwallet) {
+		await initHopWallet();
 	}
 	document.getElementById("hopInDiv").style.display = "block";
 }
 
-function showHopOut() {
+// To show the hopOutDiv, we need to show PoolAddrOnBCH's balance and the used address table
+async function showHopOut() {
 	document.getElementById("hopInDiv").style.display = "none";
+
+	var bchPoolWallet = await Wallet.watchOnly(PoolAddrOnBCH);
+	var updatePoolBalance = async function() {
+		const sats = await bchPoolWallet.getBalance("sat")
+		document.getElementById("bchPoolBalance").innerText = sats/100000000.
+	}
+	updatePoolBalance();
+        clearInterval(window.bchPoolTimer);
+	window.bchPoolTimer = setInterval(updatePoolBalance, 12000);
+
+	const addrList = getRecentAddressList();
+	if(addrList.length == 0) return;
+	const addrTbl = makeHisAddrTable(addrList);
+	const hint = T("Following is some recipient addresses you used before. You can click one to use it for this time://以下是一些您之前使用过的收款地址，可点击其中一个作为此次收款地址：")
+	var hisAddrTable = document.getElementById("hisAddrTable")
+	hisAddrTable.innerHTML = "<p><br>"+hint+"</p>"+addrTbl;
+
 	document.getElementById("hopOutDiv").style.display = "block";
 }
 
-async function initWallet() {
+// Initialize the hop-wallet, whose private key is the hash of a signature generated by web3-wallet
+async function initHopWallet() {
 	const provider = new ethers.providers.Web3Provider(window.ethereum);
 	const signer = provider.getSigner();
 	const myAddr = await signer.getAddress();
@@ -162,16 +213,18 @@ async function initWallet() {
 	var privKey = ethers.BigNumber.from(ethers.utils.sha256(signature));
 	const prime = ethers.BigNumber.from("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364140");
 	privKey = privKey.mod(prime);
-	//console.log("privKey", privKey.toHexString());
 	const wif = hex2wif(privKey.toHexString().substr(2));
-	//console.log("wif", wif);
-	window.wallet = await Wallet.fromWIF(wif);
-	const cashAddr = window.wallet.getDepositAddress();
+	window.hopwallet = await Wallet.fromWIF(wif);
+
+	// show hop-wallet's address in text and QRCode
+	const cashAddr = window.hopwallet.getDepositAddress();
 	const legacyAddr = bchaddr.toLegacyAddress(cashAddr);
 	document.getElementById("cashAddr").innerText = cashAddr;
 	document.getElementById("legacyAddr").innerText = legacyAddr;
 	new QRious({element: document.getElementById("cashAddrQR"), value: cashAddr});
 	new QRious({element: document.getElementById("legacyAddrQR"), value: legacyAddr});
+
+	// hop-wallet will watch the incoming coins inside the hopInRefresh function
 	window.FromBlock = await provider.getBlockNumber();
         clearInterval(window.refreshTimer);
         window.refreshTimer = setInterval(hopInRefresh, 6000);
@@ -180,6 +233,7 @@ async function initWallet() {
 function makeBchTxLink(txId) {
 	var linkNode = document.createElement("A");
 	linkNode.href = "https://blockchair.com/bitcoin-cash/transaction/"+txId;
+	linkNode.target = "_blank"
 	linkNode.innerHTML = "<code>"+txId+"</code>";
 	return linkNode;
 }
@@ -187,45 +241,48 @@ function makeBchTxLink(txId) {
 function makeSmartBchTxLink(txId) {
 	var linkNode = document.createElement("A");
 	linkNode.href = "https://www.smartscan.cash/transaction/"+txId;
+	linkNode.target = "_blank"
 	linkNode.innerHTML = "<code>"+txId+"</code>";
 	return linkNode;
 }
 
+// Check whether there is enough coins sent into hop-wallet, and if so, send them to IncomeAddrOnBCH, with the 
+// cross-chain target address (ccTargetAddr) embedded inside OP_RETURN
+// Check whether PoolAddrOnBCH has sent coins to the cross-chain target address
 async function hopInRefresh() {
 	const provider = new ethers.providers.Web3Provider(window.ethereum);
 	const signer = provider.getSigner();
-	const myAddr = await signer.getAddress();
+	const ccTargetAddr = await signer.getAddress();
 
 	// Check Main Chain
-	const balance = await wallet.getBalance('sat');
-	console.log("balance", balance);
+	const balance = await window.hopwallet.getBalance('sat');
 	if(balance >= 20000/*0.0002BCH*/) {
-		const txData = await wallet.send([
-			OpReturnDataFromString(myAddr),
-			{cashaddr: PoolAddrOnBCH, value: balance-MinerFee, unit: "sat"},
+		const txData = await window.hopwallet.send([
+			OpReturnDataFromString(ccTargetAddr), //first output is just OP_RETURN
+			{cashaddr: IncomeAddrOnBCH, value: balance-MinerFee, unit: "sat"}, //second output has BCH
 		]);
 		const amount = balance/100000000.0;
 		const text = T(`Find ${amount} BCH in hop-wallet, now sending them to smartBCH with this transaction: //发现hop-wallet中的余额为${amount}，现将它们发送至smartBCH，通过此交易：`);
-		AddToInGrogressDiv(text, makeBchTxLink(txData.txId));
+		AddToInProgressDiv(text, makeBchTxLink(txData.txId));
 	}
-	// Check Side Chain
+	// Check Side Chain's Transfer event, because coins are send through SEP206 calls
 	const Transfer = ethers.utils.id("Transfer(address,address,uint256)");
-	const myAddrPad32 = ethers.utils.hexZeroPad(myAddr, 32);
+	const myAddrPad32 = ethers.utils.hexZeroPad(ccTargetAddr, 32);
 	var tokenIdList = [];
-	var filter = {address: CCAddress, topics: [Transfer, null/*sender*/, myAddrPad32/*receiver*/]};
+	var filter = {address: CCTransAddress, topics: [Transfer, null/*sender*/, myAddrPad32/*receiver*/]};
 	filter.toBlock = 10000*10000 // a very large value
 	filter.fromBlock = window.FromBlock;
 	var logs = await provider.getLogs(filter);
-	console.log("logs", logs)
 	for(var i=0; i<logs.length; i++) {
 		window.FromBlock = logs[i].blockNumber + 1;
 		const amount = ethers.utils.formatUnits(logs[i].data);
 		const text = T(`On smartBCH, ${amount} BCH were sent to your account in this transaction: //在smartBCH上，数额为${amount}的BCH刚刚发送至您的账户，通过此交易：`);
-		AddToInGrogressDiv(text, makeSmartBchTxLink(logs[i].transactionHash));
+		AddToInProgressDiv(text, makeSmartBchTxLink(logs[i].transactionHash));
 	}
 }
 
-function AddToInGrogressDiv(text, linkNode) {
+// The "inProgress" div shows the progress of coins hopping in smartBCH
+function AddToInProgressDiv(text, linkNode) {
 	var textNode = document.createTextNode(text);
 	var node = document.createElement("P");
 	node.appendChild(textNode);
@@ -233,48 +290,131 @@ function AddToInGrogressDiv(text, linkNode) {
 	document.getElementById("inProgress").appendChild(node);
 }
 
-async function transfer() {
-	const addr = document.getElementById("recipientAddr").value;
-	if(!bchaddr.isValidAddress(addr)) {
+// Load the recently used address from localStorage
+function getRecentAddressList() {
+	var addrList = []
+	for(var i=0; i<localStorage.length; i++) {
+		const addr = localStorage.key(i)
+		const lastAccess = localStorage.getItem(addr)
+		addrList.push({addr, lastAccess})
+	}
+	addrList.sort(function(a, b) {return b.lastAccess - a.lastAccess})
+	const end = Math.min(addrList.length, 5)
+	return addrList.slice(0, end)
+}
+
+// Make a table to show the recently used address for the user to click and view
+function makeHisAddrTable(addrList) {
+	var contents = []
+	for(var i=0; i<addrList.length; i++) {
+		const addr = addrList[i].addr;
+		var truncatedAddr = addr;
+		if(truncatedAddr.length > 20) {
+			truncatedAddr = addr.substr(0, 10)+"..."+addr.substr(addr.length-10)
+		}
+		const txt = T("View//查看")
+		const url = "https://blockchair.com/bitcoin-cash/address/"+addr
+		var s = `<p style="font-size: 4px>&nbsp;</p><p style="font-size: 8px>\n`
+       		s += `<a href="javascript:void(0)" onclick="return fill('${addr}');">${truncatedAddr}</a>\n`
+		s += `&nbsp;<a href="${url}" target="_blank">${txt}</a></p>`
+		contents.push(s)
+	}
+	return contents.join("\n")
+}
+
+// Fill the "recipientAddr" field with a recently used address
+function fill(recentlyUsedAddr) {
+	document.getElementById("recipientAddr").value = recentlyUsedAddr;
+	return false; //returning false can prevent the browser from following href
+}
+
+// Transfer coins from smartBCH to BCH
+async function smartBCH_to_BCH() {
+	const addr = document.getElementById("recipientAddr").value.trim();
+	if(!bchaddr.isValidAddress(addr) || bchaddr.isBitpayAddress(addr)) {
 		myAlert(T("Invalid address for BCH main chain://不是有效的BCH主链地址：")+addr);
 		return;
 	}
-	window.recipientAddr = addr;
-	const amount = ethers.utils.parseUnits(document.getElementById("amount").value);
-	
+	if(bchaddr.isLegacyAddress(addr)) {
+		var r = confirm(T("⚠️Warning: Please make sure the recipient's address is for BCH, instead of BTC, or you'll lost the coins. Do you want to preceed with this legacy-format address?//⚠️警告：请确认接收者的地址是BCH收款地址，而非BTC收款地址，否则您将丢失您的资金！您希望继续使用此Legacy格式的地址进行跨链转账吗？"));
+		if(!r) {
+			return
+		}
+	}
+	var addrWithoutPrefix = addr;
+	const prefix = "bitcoincash:"
+	if(addr.startsWith(prefix)) {
+		addrWithoutPrefix = addr.substr(prefix.length);
+	}
+	localStorage.setItem(addrWithoutPrefix, Date.now())
+	window.recipientAddr = bchaddr.toCashAddress(addr);
+
 	const provider = new ethers.providers.Web3Provider(window.ethereum);
 	const signer = provider.getSigner();
+	const balance256 = await provider.getBalance(await signer.getAddress())
+	const balance = ethers.utils.formatUnits(balance256)
+	const amount = document.getElementById("amount").value
+	if(amount.length == 0 || amount <= 0) {
+		myAlert(T("Please enter valid transfer amount//请输入有效的传输金额"));
+		return;
+	}
+	const amount256 = ethers.utils.parseUnits(amount)
+	const poolBalance = document.getElementById("bchPoolBalance").innerText
+	if(poolBalance < amount) {
+		myAlert(T(`The coins in pool are not enough for this transfer.//资金池中的BCH不足以完成本次传输。`));
+		return;
+	}
+	if(balance < amount + 0.00005) {
+		myAlert(T(`You balance is ${balance}, not enough for this transfer.//您的余额仅剩${balance}，不足以完成本次传输。`));
+		return;
+	}
+	if(amount < 0.0002) {
+		myAlert(T(`The minimum amount for cross-chain transfer is 0.0002.//跨链传输的最小金额为0.0002。`));
+		return;
+	}
+
+	document.getElementById("transferBtn").disabled = true; //disable it to prevent the user clicking again
+
+	//record the recipient's balance before transfer cross-chain coins to it
+	window.recipientWallet = await Wallet.watchOnly(window.recipientAddr);
+	window.lastSeenBalance = await window.recipientWallet.getBalance("sat");
+
 	const txReq = {
-	      to: CrossChainAddrOnSmartBCH,
-	      value: amount,
+	      to: IncomeAddrOnSmartBCH,
+	      value: amount256,
 	      data: ethers.utils.hexlify(ethers.utils.toUtf8Bytes(addr)),
+	      gasPrice: ethers.BigNumber.from("0x3e63fa64"), //1.05Gwei
 	};
+
 	const txResp = await signer.sendTransaction(txReq);
 	const receipt = await txResp.wait();
 	
 	var link = document.getElementById("hopOutTxLink");
 	link.innerHTML = "<code>"+receipt.transactionHash+"</code>";
 	link.href="https://www.smartscan.cash/transaction/"+receipt.transactionHash;
+
+	// Switch display
 	document.getElementById("hopOutForm").style.display = "none";
 	document.getElementById("hopOutTxInfo").style.display = "block";
 
-	window.legacyAddr = bchaddr.toLegacyAddress(addr);
-	const wallet = await Wallet.watchOnly(addr);
-	wallet.watchAddressTransactions(showTxOfRecipient);
+	// Watch the balance of recipientWallet in the "hopOutRefresh" function
+        clearInterval(window.refreshTimer);
+        window.refreshTimer = setInterval(hopOutRefresh, 6000);
 }
 
-function showTxOfRecipient(tx) {
-	var amount = 0;
-	for(var i=0; i<tx.vout.length; i++) {
-		const utxo = tx.vout[i]
-		if(utxo.scriptPubKey && utxo.scriptPubKey.type == "pubkeyhash" && utxo.scriptPubKey.addresses &&
-		utxo.scriptPubKey.addresses[0] == window.legacyAddr) {
-			amount += utxo.value;
-		}
-	}
-	const text = T(`Recipient address received ${amount} BCH in a new transaction: //收款地址在新交易中收到了${amount} BCH：`);
+// If the balance of recipientWallet changes, add notification into the "outProgress" div
+async function hopOutRefresh() {
+	const balance = await window.recipientWallet.getBalance("sat");
+	if(balance == window.lastSeenBalance) return;
+	const b = balance / 100000000.0;
+	const lb = window.lastSeenBalance / 100000000.0;
+	window.lastSeenBalance = balance;
+	const text = T(`Recipient's balance is changed to ${b} BCH from ${lb} BCH.//收款地址的余额由${lb}BCH变成了${b}BCH。`);
 	var textNode = document.createTextNode(text);
-	var linkNode = makeBchTxLink(tx.hash);
+	var linkNode = document.createElement("A");
+	linkNode.href = "https://blockchair.com/bitcoin-cash/address/"+window.recipientAddr;
+	linkNode.target = "_blank"
+	linkNode.innerHTML = T("View it on explorer//在浏览器中查看");
 	var node = document.createElement("P");
 	node.appendChild(textNode);
 	node.appendChild(linkNode);
@@ -310,7 +450,9 @@ async function connectWallet() {
 	if(!connect()) {return;}
 	const provider = new ethers.providers.Web3Provider(window.ethereum);
 	const signer = provider.getSigner();
-	document.getElementById("currAddr").innerText = await signer.getAddress();
+	const addr = await signer.getAddress();
+	document.getElementById("currAddr").innerText = addr;
+	document.getElementById("currAddrLink").href = "https://www.smartscan.cash/address/"+addr;
 	document.getElementById("walletP").style.display = "none";
 	document.getElementById("selDiv").style.display = "block";
 }
@@ -320,6 +462,7 @@ function myAlert(text) {
 	document.getElementById("modalContent").innerText = text;
 }
 
+// Select the English version of Chinese version of a text
 function T(text) {
 	try {
 		const twoStr = text.split("//");
@@ -332,6 +475,7 @@ function T(text) {
 	}
 }
 
+// Add the smartBCH chain to a web3 wallet
 async function addSmartBCH() {
 	const err = await window.ethereum.request({
 	  method: 'wallet_addEthereumChain',
@@ -404,7 +548,7 @@ if(IsPC()) {
    document.body.style.zoom = 1.36;
 }
 
-//https://blockchair.com/bitcoin-cash/transaction/21b3f273238ceec957c8aab4cb774f111eca1d3ba84900db0bb7062028593494
+//localStorage.clear()
 </script>
 </body>
 </html>
