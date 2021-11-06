@@ -108,8 +108,13 @@
       <code id="legacyAddr"></code><br>
       <canvas id="legacyAddrQR"></canvas>
     </p>
-    <p data-T>Your hop-wallet is continuously watched here, and once on-chain deposit makes its balance no less than 0.0002 BCH, these funds will be transferred to smartBCH automatically. //您的Hop钱包将在此被持续地监控，一旦链上充值使它的余额不小于0.0002 BCH，则这些资金将被自动传送至smartBCH。</p>
     <p data-T style="color: red; font-weight: bold">Note: Your hop-wallet should only be used for this site! If you grant other websites to use it, your funds may be stolen!//注意：您的Hop钱包应该仅仅在本网站使用！如果授权其他网站使用您的Hop钱包，您的资金可能被盗！</p>
+    <p data-T>Your hop-wallet is continuously watched here, and once on-chain deposit makes its balance no less than 0.0002 BCH, these funds will be transferred to smartBCH automatically. //您的Hop钱包将在此被持续地监控，一旦链上充值使它的余额不小于0.0002 BCH，则这些资金将被自动传送至smartBCH。</p>
+    <div id="inHistory">
+      <center><button class="button is-success is-light is-small" onclick="showInHistoryList()" 
+	id="inHistoryBtn" data-T>Cross-chain Transfer History//跨链转账历史</button></center>
+      <div id="inHistoryList"></div>
+    </div>
     <div id="inProgress"></div>
     <!--
     <center data-T>Under Construction//建设中...</center>
@@ -195,11 +200,12 @@ async function showHopOut() {
 	window.bchPoolTimer = setInterval(updatePoolBalance, 12000);
 
 	const addrList = getRecentAddressList();
-	if(addrList.length == 0) return;
-	const addrTbl = makeHisAddrTable(addrList);
-	const hint = T("Following is some recipient addresses you used before. You can click one to use it for this time://以下是一些您之前使用过的收款地址，可点击其中一个作为此次收款地址：")
-	var hisAddrTable = document.getElementById("hisAddrTable")
-	hisAddrTable.innerHTML = "<p><br>"+hint+"</p>"+addrTbl;
+	if(addrList.length != 0) {
+		const addrTbl = makeHisAddrTable(addrList);
+		const hint = T("Following is some recipient addresses you used before. You can click one to use it for this time://以下是一些您之前使用过的收款地址，可点击其中一个作为此次收款地址：")
+		var hisAddrTable = document.getElementById("hisAddrTable")
+		hisAddrTable.innerHTML = "<p><br>"+hint+"</p>"+addrTbl;
+	}
 
 	document.getElementById("hopOutDiv").style.display = "block";
 }
@@ -263,31 +269,51 @@ async function hopInRefresh() {
 		]);
 		const amount = balance/100000000.0;
 		const text = T(`Find ${amount} BCH in hop-wallet, now sending them to smartBCH with this transaction: //发现hop-wallet中的余额为${amount}，现将它们发送至smartBCH，通过此交易：`);
-		AddToInProgressDiv(text, makeBchTxLink(txData.txId));
+		AddToDiv("inProgress", text, makeBchTxLink(txData.txId));
+		document.getElementById("inHistory").style.display = "none"
 	}
+	window.FromBlock = await showCCTransLogs("inProgress", provider, ccTargetAddr, window.FromBlock);
+}
+
+// show the cross-chain transfer logs in a "divId" div
+async function showCCTransLogs(divId, provider, ccTargetAddr, fromBlock) {
 	// Check Side Chain's Transfer event, because coins are send through SEP206 calls
 	const Transfer = ethers.utils.id("Transfer(address,address,uint256)");
 	const myAddrPad32 = ethers.utils.hexZeroPad(ccTargetAddr, 32);
 	var tokenIdList = [];
-	var filter = {address: CCTransAddress, topics: [Transfer, null/*sender*/, myAddrPad32/*receiver*/]};
+	const sep206Addr = "0x0000000000000000000000000000000000002711";
+	var filter = {address: sep206Addr, topics: [Transfer, null/*sender*/, myAddrPad32/*receiver*/]};
 	filter.toBlock = 10000*10000 // a very large value
-	filter.fromBlock = window.FromBlock;
+	filter.fromBlock = fromBlock;
 	var logs = await provider.getLogs(filter);
-	for(var i=0; i<logs.length; i++) {
-		window.FromBlock = logs[i].blockNumber + 1;
+	//console.log("found logs", logs);
+	for(var i=logs.length-1; i>=0; i--) {
+		const h = logs[i].blockNumber
+		fromBlock = h + 1;
 		const amount = ethers.utils.formatUnits(logs[i].data);
-		const text = T(`On smartBCH, ${amount} BCH were sent to your account in this transaction: //在smartBCH上，数额为${amount}的BCH刚刚发送至您的账户，通过此交易：`);
-		AddToInProgressDiv(text, makeSmartBchTxLink(logs[i].transactionHash));
+		const text = T(`On smartBCH, at height ${h}, ${amount} BCH were sent to your account in this transaction: //在smartBCH上，区块高度为${h}时，数额为${amount}的BCH被发送至您的账户，通过此交易：`);
+		AddToDiv(divId, text, makeSmartBchTxLink(logs[i].transactionHash));
 	}
+	return fromBlock;
 }
 
-// The "inProgress" div shows the progress of coins hopping in smartBCH
-function AddToInProgressDiv(text, linkNode) {
+function AddToDiv(divId, text, linkNode) {
 	var textNode = document.createTextNode(text);
 	var node = document.createElement("P");
 	node.appendChild(textNode);
 	node.appendChild(linkNode);
-	document.getElementById("inProgress").appendChild(node);
+	document.getElementById(divId).appendChild(node);
+}
+
+// Show historical cross-chain transfer history in the "inHistoryList" Div
+async function showInHistoryList() {
+	document.getElementById("inHistoryBtn").disabled = true; //disable it to prevent the user clicking again
+	document.getElementById("inHistoryList").innerHTML = "";
+	const provider = new ethers.providers.Web3Provider(window.ethereum);
+	const signer = provider.getSigner();
+	const ccTargetAddr = await signer.getAddress();
+	await showCCTransLogs("inHistoryList", provider, ccTargetAddr, 0);
+	document.getElementById("inHistoryBtn").disabled = false;
 }
 
 // Load the recently used address from localStorage
@@ -482,7 +508,7 @@ async function addSmartBCH() {
 	  params: [{
 	    "chainId": "0x2710",
 	    "chainName": "smartBCH",
-	    "rpcUrls": ["https://global.uat.cash"],
+	    "rpcUrls": ["https://smartbch.fountainhead.cash/mainnet"],
 	    "nativeCurrency": {
 	      "name": "smart BCH",
 	      "symbol": "BCH",
