@@ -112,7 +112,7 @@
     <p data-T>Your hop-wallet is continuously watched here, and once on-chain deposit makes its balance no less than 0.0002 BCH, these funds will be transferred to smartBCH automatically. //您的Hop钱包将在此被持续地监控，一旦链上充值使它的余额不小于0.0002 BCH，则这些资金将被自动传送至smartBCH。</p>
     <div id="inHistory">
       <center><button class="button is-success is-light is-small" onclick="showInHistoryList()" 
-	id="inHistoryBtn" data-T>Cross-chain Transfer History//跨链转账历史</button></center>
+	id="inHistoryBtn" data-T>Cross-chain Transfer History (latest 20)//跨链转账历史（最近20条）</button></center>
       <div id="inHistoryList"></div>
     </div>
     <div id="inProgress"></div>
@@ -269,7 +269,7 @@ async function hopInRefresh() {
 		]);
 		const a = amt/100000000.0;
 		const b = balance/100000000.0;
-		const text = T(`Find ${b} BCH in hop-wallet, after deducting miner fee, send ${a} BCH to smartBCH with this transaction: //发现hop-wallet中的余额为${b}，扣除矿工费之后，将${a}BCH发送至smartBCH，交易ID：`);
+		const text = T(`[Cross-Chain 50% Finished] Find ${b} BCH in hop-wallet, after deducting miner fee, send ${a} BCH to cross-chain bridge with this transaction: //【跨链完成50%】发现hop钱包中的余额为${b}，扣除矿工费之后，${a}个BCH已被发送至跨链桥，交易ID：`);
 		AddToDiv("inProgress", text, makeBchTxLink(txData.txId));
 		document.getElementById("inHistory").style.display = "none"
 	}
@@ -288,11 +288,12 @@ async function showCCTransLogs(divId, provider, ccTargetAddr, fromBlock) {
 	filter.fromBlock = fromBlock;
 	var logs = await provider.getLogs(filter);
 	//console.log("found logs", logs);
-	for(var i=logs.length-1; i>=0; i--) {
+	const end = Math.max(0, logs.length-20) // at most 20 entries
+	for(var i=logs.length-1; i>=end; i--) {
 		const h = logs[i].blockNumber
 		fromBlock = h + 1;
 		const amount = ethers.utils.formatUnits(logs[i].data);
-		const text = T(`On smartBCH, at height ${h}, ${amount} BCH were sent to your account in this transaction: //在smartBCH上，区块高度为${h}时，数额为${amount}的BCH被发送至您的账户，通过此交易：`);
+		const text = T(`[Cross-chain Finished] After deduct the cross-chain fee, ${amount} BCH were sent to your smartBCH account at height ${h}, in this transaction: //【跨链成功】扣除跨链手续费之后，${amount}个BCH被发送至您的smartBCH账户，区块高度${h}，交易ID：`);
 		AddToDiv(divId, text, makeSmartBchTxLink(logs[i].transactionHash));
 	}
 	return fromBlock;
@@ -301,9 +302,14 @@ async function showCCTransLogs(divId, provider, ccTargetAddr, fromBlock) {
 function AddToDiv(divId, text, linkNode) {
 	var textNode = document.createTextNode(text);
 	var node = document.createElement("P");
+	node.style.marginTop = "6px"
 	node.appendChild(textNode);
 	node.appendChild(linkNode);
 	document.getElementById(divId).appendChild(node);
+	node = document.createElement("P");
+	//node.innerHTML = "<br>"
+	//node.style.font = "6px"
+	//document.getElementById(divId).appendChild(node);
 }
 
 // Show historical cross-chain transfer history in the "inHistoryList" Div
