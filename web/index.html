@@ -108,7 +108,7 @@
       <code id="legacyAddr"></code><br>
       <canvas id="legacyAddrQR"></canvas>
     </p>
-    <p data-T style="color: red; font-weight: bold">Note: Your hop-wallet should only be used for this site! If you grant other websites to use it, your funds may be stolen!//注意：您的Hop钱包应该仅仅在本网站使用！如果授权其他网站使用您的Hop钱包，您的资金可能被盗！</p>
+    <p data-T style="color: red; font-weight: bold">Please do not sign any message containing "[Grant-Hop-Wallet]" on other website to keep you your funds safe!//请勿在其他网站上签署包含“【授权Hop钱包】”字样的消息，以确保您的资金安全！</p>
     <p data-T>Your hop-wallet is continuously watched here, and once on-chain deposit makes its balance no less than 0.0002 BCH, these funds will be transferred to smartBCH automatically. //您的Hop钱包将在此被持续地监控，一旦链上充值使它的余额不小于0.0002 BCH，则这些资金将被自动传送至smartBCH。</p>
     <div id="inHistory">
       <center><button class="button is-primary is-light is-small" onclick="showInHistoryList()" 
@@ -213,7 +213,7 @@ async function initHopWallet() {
 	const provider = new ethers.providers.Web3Provider(window.ethereum);
 	const signer = provider.getSigner();
 	const myAddr = await signer.getAddress();
-	const signature = await signer.signMessage("I hereby grant this website the permission to access my hop-wallet for "+myAddr);
+	const signature = await signer.signMessage(`[Grant-Hop-Wallet]【授权Hop钱包】\n${myAddr}\nI hereby grant this website the permission to access my hop-wallet for above address.\n我郑重授权此网站访问以上地址的Hop钱包。`);
 	var privKey = ethers.BigNumber.from(ethers.utils.sha256(signature));
 	const prime = ethers.BigNumber.from("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364140");
 	privKey = privKey.mod(prime);
