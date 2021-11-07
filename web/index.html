@@ -136,8 +136,8 @@
     </div>
     <p style="font-size: 8px;">&nbsp;</p>
     <p id="hopOutTxInfo" style="display: none">
-      <span data-T>Your cross-chain transfer's transaction is://您的跨链转账交易为：</span><a id="hopOutTxLink" href="" target="_blank"></a><br>
-      <span data-T>The recipient address is continuously watched here. Once it receives new coins, you'll be notified below.//这里将持续监控主链收款地址，一旦它接收到了新币，您将会被提示。</span>
+      <span id="hopOutHint"></span><a id="hopOutTxLink" href="" target="_blank"></a><br>
+      <span id="hopOutWatchHint"></span>
     </p> 
     <div id="outProgress"></div>
   </div>
@@ -293,7 +293,7 @@ async function showCCTransLogs(divId, provider, ccTargetAddr, fromBlock) {
 		const h = logs[i].blockNumber
 		fromBlock = h + 1;
 		const amount = ethers.utils.formatUnits(logs[i].data);
-		const text = T(`[Cross-chain Finished] After deduct the cross-chain fee, ${amount} BCH were sent to your smartBCH account at height ${h}, in this transaction: //【跨链成功】扣除跨链手续费之后，${amount}个BCH被发送至您的smartBCH账户，区块高度${h}，交易ID：`);
+		const text = T(`[Cross-chain 100% Finished] After deduct the cross-chain fee, ${amount} BCH were sent to your smartBCH account at height ${h}, in this transaction: //【跨链成功】扣除跨链手续费之后，${amount}个BCH被发送至您的smartBCH账户，区块高度${h}，交易ID：`);
 		AddToDiv(divId, text, makeSmartBchTxLink(logs[i].transactionHash));
 	}
 	return fromBlock;
@@ -386,7 +386,7 @@ async function smartBCH_to_BCH() {
 	const signer = provider.getSigner();
 	const balance256 = await provider.getBalance(await signer.getAddress())
 	const balance = ethers.utils.formatUnits(balance256)
-	const amount = document.getElementById("amount").value
+	var amount = document.getElementById("amount").value
 	if(amount.length == 0 || amount <= 0) {
 		myAlert(T("Please enter valid transfer amount//请输入有效的传输金额"));
 		return;
@@ -397,7 +397,7 @@ async function smartBCH_to_BCH() {
 		myAlert(T(`The coins in pool are not enough for this transfer.//资金池中的BCH不足以完成本次传输。`));
 		return;
 	}
-	if(balance < amount + 0.00005) {
+	if(balance < amount + 0.00005/*estimated gas fee*/) {
 		myAlert(T(`You balance is ${balance}, not enough for this transfer.//您的余额仅剩${balance}，不足以完成本次传输。`));
 		return;
 	}
@@ -421,7 +421,16 @@ async function smartBCH_to_BCH() {
 
 	const txResp = await signer.sendTransaction(txReq);
 	const receipt = await txResp.wait();
-	
+
+	var s = T(`[Cross-Chain 50% Finished] Your ${amount} BCH on side-chain has been sent to the cross-chain bridge in this transaction://【跨链完成50%】您的${amount}个侧链BCH已经发送至跨链桥，交易ID：`)
+	document.getElementById("hopOutHint").innerText = s;
+
+	var fee = Math.max(amount * 0.001, 0.0001);
+	amount = amount - fee;
+	amount = amount.toFixed(8)*1.0
+	s = T(`Your recipient address on main chain will receive ${amount} BCH, after deducting the cross-chain fee. Your recipient address is continuously watched here. Once it receives new coins, you'll be notified below.//您的主链收款地址将收到${amount}个BCH（已扣除跨链手续费）。这里将持续监控主链收款地址，一旦它接收到了新币，您将会被提示。`);
+	document.getElementById("hopOutWatchHint").innerText = s;
+
 	var link = document.getElementById("hopOutTxLink");
 	link.innerHTML = "<code>"+receipt.transactionHash+"</code>";
 	link.href="https://www.smartscan.cash/transaction/"+receipt.transactionHash;
@@ -442,13 +451,16 @@ async function hopOutRefresh() {
 	const b = balance / 100000000.0;
 	const lb = window.lastSeenBalance / 100000000.0;
 	window.lastSeenBalance = balance;
-	const text = T(`Recipient's balance is changed to ${b} BCH from ${lb} BCH.//收款地址的余额由${lb}BCH变成了${b}BCH。`);
+	var diff = b-lb;
+	diff = diff.toFixed(8)*1.0;
+	const text = T(`[Cross-chain 100% Finished] The main-chain recipient address's balance was increased by ${diff} BCH.//【跨链成功】主链收款地址的余额增加了${diff}BCH。`);
 	var textNode = document.createTextNode(text);
 	var linkNode = document.createElement("A");
 	linkNode.href = "https://blockchair.com/bitcoin-cash/address/"+window.recipientAddr;
 	linkNode.target = "_blank"
-	linkNode.innerHTML = T("View it on explorer//在浏览器中查看");
+	linkNode.innerHTML = T("View the change on explorer//在浏览器中查看余额变化");
 	var node = document.createElement("P");
+	node.style.marginTop = "6px"
 	node.appendChild(textNode);
 	node.appendChild(linkNode);
 	document.getElementById("outProgress").appendChild(node);
@@ -466,14 +478,16 @@ async function connect() {
 			const provider = await detectEthereumProvider();
 			if (provider) {
 				window.ethereum = provider;
+			} else if(IsPC()) {
+				myAlert(T("Your browser has not installed a wallet extension (like MetaMask).//您的浏览器尚未安装钱包扩展（例如MetaMask）。"));
 			} else {
-				myAlert(T("您尚未安装钱包//You have not installed a wallet"));
+				myAlert(T("Please open this page inside a mobile wallet App.//请使用钱包APP内置浏览器打开本页面。"));
 			}
 		}
 	}
 	window.accounts = await window.ethereum.request({method: 'eth_requestAccounts'});
 	if (window.accounts.length == 0) {
-		myAlert(T("钱包连接失败//Cannot connect to wallet"));
+		myAlert(T("Cannot connect to wallet//钱包连接失败"));
 		return false;
 	}
 	return true;
