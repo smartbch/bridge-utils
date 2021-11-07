@@ -74,7 +74,7 @@
   <p style="font-size: 8px;">&nbsp;</p>
 
   <p style="text-align: center" id="walletP">
-      <button class="button is-large is-success is-light" onclick="connectWallet()" data-T>Connect to Wallet//连接钱包</button>
+      <button class="button is-large is-primary is-light" onclick="connectWallet()" data-T>Connect to Wallet//连接钱包</button>
   </p>
   <p style="font-size: 8px;">&nbsp;</p>
 
@@ -111,7 +111,7 @@
     <p data-T style="color: red; font-weight: bold">Note: Your hop-wallet should only be used for this site! If you grant other websites to use it, your funds may be stolen!//注意：您的Hop钱包应该仅仅在本网站使用！如果授权其他网站使用您的Hop钱包，您的资金可能被盗！</p>
     <p data-T>Your hop-wallet is continuously watched here, and once on-chain deposit makes its balance no less than 0.0002 BCH, these funds will be transferred to smartBCH automatically. //您的Hop钱包将在此被持续地监控，一旦链上充值使它的余额不小于0.0002 BCH，则这些资金将被自动传送至smartBCH。</p>
     <div id="inHistory">
-      <center><button class="button is-success is-light is-small" onclick="showInHistoryList()" 
+      <center><button class="button is-primary is-light is-small" onclick="showInHistoryList()" 
 	id="inHistoryBtn" data-T>Cross-chain Transfer History (latest 20)//跨链转账历史（最近20条）</button></center>
       <div id="inHistoryList"></div>
     </div>
@@ -126,11 +126,11 @@
     <div id="hopOutForm">
       <center><b data-T>Pool Balance on main chain://主链资金池余额：</b><span id="bchPoolBalance"></span></center>
       <p><span data-T>Recipient Address on main chain://主链收款地址：</span><br>
-      <input id="recipientAddr" class="input is-success is-small" type="text"></p>
+      <input id="recipientAddr" class="input is-primary is-small" type="text"></p>
       <p><span data-T>Amount://金额：</span>
-      <input id="amount" type="number" class="input is-success is-small" ></p>
+      <input id="amount" type="number" class="input is-primary is-small" ></p>
       <p style="font-size: 8px;">&nbsp;</p>
-      <center><button class="button is-success is-light" onclick="smartBCH_to_BCH()" 
+      <center><button class="button is-primary is-light" onclick="smartBCH_to_BCH()" 
 	id="transferBtn" data-T>Cross-chain Transfer//跨链转账</button></center>
       <div id="hisAddrTable"></div>
     </div>
