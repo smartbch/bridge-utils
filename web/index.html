@@ -1,6 +1,7 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <link rel="icon" href="favicon.png" />
 <script src="https://cdn.ethers.io/lib/ethers-5.2.umd.min.js" type="application/javascript"></script>
 <script src="https://unpkg.com/bchaddrjs@0.5.2/dist/bchaddrjs-0.5.2.min.js"></script>
@@ -230,8 +231,8 @@ async function initHopWallet() {
 
 	// hop-wallet will watch the incoming coins inside the hopInRefresh function
 	window.FromBlock = await provider.getBlockNumber();
-        clearInterval(window.refreshTimer);
-        window.refreshTimer = setInterval(hopInRefresh, 6000);
+        clearInterval(window.hopInRefreshTimer);
+        window.hopInRrefreshTimer = setInterval(hopInRefresh, 6000);
 }
 
 function makeBchTxLink(txId) {
@@ -281,9 +282,10 @@ async function showCCTransLogs(divId, provider, ccTargetAddr, fromBlock) {
 	// Check Side Chain's Transfer event, because coins are send through SEP206 calls
 	const Transfer = ethers.utils.id("Transfer(address,address,uint256)");
 	const myAddrPad32 = ethers.utils.hexZeroPad(ccTargetAddr, 32);
+	const senderAddrPad32 = ethers.utils.hexZeroPad(PoolAddrOnSmartBCH, 32);
 	var tokenIdList = [];
 	const sep206Addr = "0x0000000000000000000000000000000000002711";
-	var filter = {address: sep206Addr, topics: [Transfer, null/*sender*/, myAddrPad32/*receiver*/]};
+	var filter = {address: sep206Addr, topics: [Transfer, senderAddrPad32, myAddrPad32/*receiver*/]};
 	filter.toBlock = 10000*10000 // a very large value
 	filter.fromBlock = fromBlock;
 	var logs = await provider.getLogs(filter);
@@ -315,11 +317,15 @@ function AddToDiv(divId, text, linkNode) {
 // Show historical cross-chain transfer history in the "inHistoryList" Div
 async function showInHistoryList() {
 	document.getElementById("inHistoryBtn").disabled = true; //disable it to prevent the user clicking again
-	document.getElementById("inHistoryList").innerHTML = "";
+	var inHistoryList = document.getElementById("inHistoryList");
+	inHistoryList.innerHTML = "";
 	const provider = new ethers.providers.Web3Provider(window.ethereum);
 	const signer = provider.getSigner();
 	const ccTargetAddr = await signer.getAddress();
 	await showCCTransLogs("inHistoryList", provider, ccTargetAddr, 0);
+	if(inHistoryList.innerHTML.length == 0) {
+		inHistoryList.innerHTML = T("Found no historical cross-chain transfer//没有找到历史转账记录");
+	}
 	document.getElementById("inHistoryBtn").disabled = false;
 }
 
@@ -440,8 +446,8 @@ async function smartBCH_to_BCH() {
 	document.getElementById("hopOutTxInfo").style.display = "block";
 
 	// Watch the balance of recipientWallet in the "hopOutRefresh" function
-        clearInterval(window.refreshTimer);
-        window.refreshTimer = setInterval(hopOutRefresh, 6000);
+        clearInterval(window.hopOutRefreshTimer);
+        window.hopOutRefreshTimer = setInterval(hopOutRefresh, 6000);
 }
 
 // If the balance of recipientWallet changes, add notification into the "outProgress" div
