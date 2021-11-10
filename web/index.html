@@ -407,8 +407,8 @@ async function smartBCH_to_BCH() {
 		myAlert(T(`You balance is ${balance}, not enough for this transfer.//您的余额仅剩${balance}，不足以完成本次传输。`));
 		return;
 	}
-	if(amount < 0.0002) {
-		myAlert(T(`The minimum amount for cross-chain transfer is 0.0002.//跨链传输的最小金额为0.0002。`));
+	if(amount < 0.01) {
+		myAlert(T(`The minimum amount for cross-chain transfer is 0.01.//跨链传输的最小金额为0.01。`));
 		return;
 	}
 
